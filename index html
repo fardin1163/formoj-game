@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#211b35">
+<title>فُرمُژ | بازی دونفره آنلاین</title>
+<!-- کتابخانه سوپابیس -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#171326;--panel:#241d39;--panel2:#302647;--ink:#fff9f0;--muted:#c6bad6;--gold:#f4c66a;--pink:#ff789b;--green:#6bd6ad;--line:#514365}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#34264d,#171326 60%);color:var(--ink);font-family:Tahoma,Arial,sans-serif;min-height:100vh}
+main{max-width:760px;margin:auto;padding:18px 14px 36px}.brand{text-align:center;padding:12px 0 18px}.brand h1{font-size:32px;margin:0;color:var(--gold);letter-spacing:1px}.brand p{margin:8px 0 0;color:var(--muted);font-size:13px}
+.panel{background:rgba(36,29,57,.96);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 12px 30px #09061155}
+h2{font-size:17px;margin:0 0 12px;color:var(--gold)}p{line-height:1.8}.muted{color:var(--muted);font-size:13px}
+input{width:100%;background:#171326;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px;margin:6px 0;text-align:center;font-size:18px;letter-spacing:2px}
+button{border:0;border-radius:12px;padding:12px 14px;font-weight:bold;cursor:pointer;background:var(--gold);color:#24182e;min-height:46px;width:100%;margin-top:8px;font-family:inherit;font-size:16px}
+button.alt{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+button.join{background:var(--green);color:#171326}
+button:disabled{opacity:.45;cursor:not-allowed}
+.hidden{display:none!important}
+.status{padding:10px;border-radius:12px;background:#171326;color:var(--muted);font-size:13px;margin-top:15px;text-align:center}
+.status.ok{color:var(--green);border:1px solid var(--green)}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.player{background:#171326;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center;transition:0.3s}
+.player.active{border-color:var(--gold);box-shadow:0 0 15px #f4c66a88}
+.avatar{width:70px;height:70px;border-radius:50%;border:4px solid var(--gold);margin:0 auto 8px;display:grid;place-items:center;font-size:24px;font-weight:bold;background:var(--panel2)}
+.player:first-child .avatar{border-color:#4d9dff;color:#4d9dff}.player:last-child .avatar{border-color:#ff78b5;color:#ff78b5}
+.score{font-size:22px;color:var(--gold);font-weight:bold}
+.wheelbox{text-align:center;margin-top:20px}
+.wheel{width:min(70vw,250px);height:min(70vw,250px);border-radius:50%;margin:8px auto 14px;background:conic-gradient(#e85e83 0 25%,#6a55a5 25% 50%,#e85e83 50% 75%,#6a55a5 75% 100%);border:8px solid #f4c66a;display:grid;place-items:center;position:relative;transition:transform 3s cubic-bezier(0.25, 0.1, 0.25, 1)}
+.wheel:after{content:"";position:absolute;top:-16px;border-left:12px solid transparent;border-right:12px solid transparent;border-top:0;border-bottom:22px solid var(--gold)}
+.wheel span{background:#211b35;padding:17px;border-radius:50%;font-weight:bold;z-index:10}
+.card{min-height:120px;display:grid;place-items:center;text-align:center;background:#171326;border:1px dashed var(--gold);border-radius:15px;padding:18px;font-size:16px;line-height:1.8;margin-top:15px;white-space:pre-wrap}
+</style>
+</head>
+<body><main>
+
+<header class="brand"><h1>فُرمُژ</h1><p>بازی دونفره آنلاین · حقیقت یا جرات 🎭</p></header>
+
+<!-- بخش اتصال -->
+<section class="panel" id="connectPanel">
+  <h2>ورود به بازی</h2>
+  
+  <button id="hostBtn">من فردین هستم (ساخت اتاق جدید)</button>
+  
+  <hr style="border-color:var(--line); margin:20px 0;">
+  
+  <p class="muted" style="text-align:center">اگر مژگان هستی، کد اتاق را اینجا وارد کن:</p>
+  <input type="text" id="roomCodeIn" placeholder="کد اتاق (مثلاً A7K9Q2)" style="text-transform:uppercase">
+  <button id="joinRoomBtn" class="join">ورود به اتاق</button>
+  
+  <div class="status" id="connStatus" style="margin-top:15px">هنوز به اتاقی وصل نشده‌اید.</div>
+</section>
+
+<!-- بخش اصلی بازی -->
+<section id="game" class="hidden">
+  <section class="panel">
+    
+    <!-- وضعیت اتصال و کد اتاق -->
+    <div class="status" id="roomInfo" style="margin-bottom:15px; border-color:var(--gold)">
+      کد اتاق شما: <b id="roomCodeDisplay" style="font-size: 20px; letter-spacing: 2px; color: var(--gold);"></b><br>
+      <span id="waitStatusText" style="font-size: 14px; margin-top:5px; display:block;">در انتظار ورود نفر دوم...</span>
+    </div>
+
+    <h2>وضعیت بازی</h2>
+    <div class="players">
+      <div class="player" id="player1"><div class="avatar">ف</div><div>فردین</div><div class="score" id="score1">0</div></div>
+      <div class="player" id="player2"><div class="avatar">م</div><div>مژگان</div><div class="score" id="score2">0</div></div>
+    </div>
+
+    <div class="wheelbox">
+      <div class="wheel" id="wheel"><span>بچرخون!</span></div>
+      <button id="spinBtn" disabled>در انتظار نفر دوم...</button>
+    </div>
+
+    <div class="card" id="cardBox">منتظر شروع بازی...</div>
+  </section>
+</section>
+
+</main>
+
+<script>
+// ==========================================
+// ۱. تنظیمات Supabase
+// ==========================================
+const SUPABASE_URL = 'https://nadhbqjotqcgqnmqsrwf.supabase.co';
+const SUPABASE_KEY = 'sb_publishable__bPTLQ6Qy66e62no0W7jBg_mcnEa4mG';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ==========================================
+// ۲. متغیرهای بازی
+// ==========================================
+let channel = null;
+let myRole = null; // 'host' (فردین) یا 'guest' (مژگان)
+let currentRoom = null;
+let isMyTurn = false;
+let myScore = 0;
+let oppScore = 0;
+let currentRotation = 0;
+let isConnected = false;
+
+const gameSection = document.getElementById('game');
+const spinBtn = document.getElementById('spinBtn');
+const cardBox = document.getElementById('cardBox');
+const wheel = document.getElementById('wheel');
+const waitStatusText = document.getElementById('waitStatusText');
+const roomInfoBox = document.getElementById('roomInfo');
+
+// ==========================================
+// ۳. لیست ۱۰۰ تایی حقیقت (بدون موارد حساس)
+// ==========================================
+const truthsData = [
+  "بزرگترین ترست توی زندگی چیه؟", "بزرگترین آرزوت چیه؟", "یه رازی که تا حالا به هیچ‌کس نگفتی رو بگو.",
+  "بزرگترین اشتباه زندگیت چی بود؟", "چیزی هست که توی زندگی حسرتش رو می‌خوری؟", "بزرگترین موفقیت زندگیت (از نظر خودت) چیه؟",
+  "یه عادت بد داری که دوست داری ترکش کنی؟ چیه؟", "به نظرت آدم‌ها درباره تو چه قضاوت اشتباهی می‌کنن؟", "شرم‌آورترین لحظه زندگیت چی بوده؟",
+  "بزرگترین دروغی که تا حالا گفتی چی بود؟", "چیزی هست که ازش خجالت می‌کشی ولی کسی نمی‌دونه؟", "چه چیزی باعث میشه احساس ضعف و ناتوانی کنی؟",
+  "اگه قرار بود یه کتاب درباره زندگیت بنویسی، اسمش چی بود؟", "بهترین نصیحتی که تا حالا شنیدی چی بود؟", "چیزی که هنوز توی زندگی نکردی ولی خیلی دلت می‌خواد انجامش بدی چیه؟",
+  "بزرگترین ترست درباره پیری چیه؟", "چیزی هست که دوست داری در مورد خودت تغییر بدی؟", "آخرین باری که از ته دل گریه کردی کِی بود و چرا؟",
+  "اگه یه روز از زندگیت حذف میشد، کدوم روز بود؟", "چیزی که همیشه دلت می‌خواسته انجام بدی ولی بخاطر حرف مردم انجام ندادی چیه؟", "بزرگترین ریسکی که توی زندگیت کردی چی بود؟",
+  "چه موقعیتی باعث میشه از کوره دربری؟", "چیزی که هیچ‌وقت به کسی نگفتی و الان می‌خوای بگی چیه؟", "بهترین حس دنیا از نظر تو چیه؟",
+  "اگه می‌تونستی یه ویژگی اخلاقی رو توی خودت کلاً پاک کنی، کدوم بود؟", "بهترین خاطره‌ای که از بچگیت داری چیه؟", "شیطنت‌ترین کاری که توی بچگی کردی چی بود؟",
+  "اولین شغل یا کاری که برات پول گرفتی چی بود؟", "چیزی که از بچگی تا حالا نگه داشتی چیه؟", "بهترین هدیه‌ای که توی بچگی گرفتی چی بود؟",
+  "کدوم معلمت رو هیچ‌وقت فراموش نمی‌کنی و چرا؟", "عجیب‌ترین رویایی که دیدی چی بود؟", "اگه می‌تونستی یه سفر به گذشته داشته باشی، کجا می‌رفتی؟",
+  "اولین باری که از خونه دور شدی یادت هست چه حسی داشتی؟", "بزرگترین شیطنتی که توی مدرسه کردی چی بود؟", "غذایی که مامانت (یا مادربزرگت) درست می‌کرد و خیلی دوست داری چیه؟",
+  "چیزی که توی بچگی ازش می‌ترسیدی چیه؟", "بهترین دوست دوران بچگیت کی بود؟ الان کجاست؟", "اولین آهنگی که حفظ کردی و می‌خوندی چی بود؟",
+  "اگه می‌تونستی یه روز از دوران مدرسه رو دوباره تجربه کنی، کدوم روز بود؟", "بزرگترین آرزوی بچگیت چی بود؟ (مثلاً می‌خواستی چی بشی؟)", "چیزی که توی بچگی همیشه دلت می‌خواست داشته باشی ولی نداشتی چی بود؟",
+  "اولین موبایلی که داشتی چی بود؟", "عجیب‌ترین غذایی که تا حالا خوردی چیه؟", "بهترین سفری که توی زندگیت رفتی کجا بود؟",
+  "چیزی که باعث شد توی زندگیت مسیرت عوض بشه چی بود؟", "اولین بار که عاشق یه چیزی (مثلاً یه حیوون، یه کتاب، یه هنر) شدی چی بود؟", "بدترین درسی که توی مدرسه داشتی چی بود؟",
+  "یه خاطره بامزه که هیچ‌وقت فراموش نمی‌کنی رو تعریف کن.", "چیزی که هنوز از بچگی توی ذهنت مونده و باعث خندت میشه چیه؟", "بهترین ویژگی یه دوست خوب از نظر تو چیه؟",
+  "چیزی که باعث میشه به یه نفر اعتماد کنی چیه؟", "اولین چیزی که توی رفتار یا شخصیت یه آدم توجهت رو جلب می‌کنه چیه؟", "بزرگترین Red Flag (علامت هشدار) توی آدم‌ها از نظر تو چیه؟",
+  "چه چیزی باعث میشه از یه نفر فاصله بگیری؟", "به نظرت بزرگترین نشانه احترام چیه؟", "چیزی که من می‌گم و تو همیشه تظاهر می‌کنی موافقی چیه؟",
+  "به نظرت آدم‌ها بیشتر به چه چیزی توی زندگی اهمیت میدن که نباید؟", "چیزی که توی خودت دوست داری بیشتر روی اون کار کنی چیه؟", "اگه قرار بود یه قانون برای کل دنیا وضع کنی، چی بود؟",
+  "به نظرت بخشندگی و مهربونی بیشتر توی پول خرج کردنه یا توی زمان گذاشتن؟", "چیزی که باعث میشه حس کنی یه آدم قابل اعتماده چیه؟", "به نظرت بهترین راه برای حل کردن یه سوءتفاهم چیه؟",
+  "چیزی که توی آدم‌ها اذیتت می‌کنه ولی به روی خودت نمیاری چیه؟", "به نظرت بزرگترین تفاوت بین زن‌ها و مردها توی برخورد با مشکلات چیه؟", "چیزی که یاد گرفتی ازش برای خودت و آینده‌ت استفاده کنی چیه؟",
+  "به نظرت انتقام گرفتن درسته یا بخشیدن؟", "چیزی که توی زندگیت بهت ثابت شده و همیشه بهش پایبندی چیه؟", "به نظرت شانس وجود داره یا همه‌چیز تلاشه؟",
+  "چیزی که توی یه رابطه دوستی برات غیرقابل بخششه چیه؟", "اگه بخوای یه نصیحت به خودت توی ۱۰ سال پیش بکنی، چی می‌گی؟", "به نظرت مهم‌ترین درسی که تا حالا توی زندگی یاد گرفتی چیه؟",
+  "چیزی که باعث میشه احساس امنیت کنی چیه؟", "بزرگترین تفاوت بین کسی که دوستش داری و کسی که فقط باهاش راحتی چیه؟", "به نظرت بهترین راه برای اینکه به کسی نشون بدی برات مهمه چیه؟",
+  "اگه می‌تونستی یه توانایی خارق‌العاده داشته باشی، چی انتخاب می‌کردی؟", "آهنگی که وقتی میشنوی حالت خوب میشه چیه؟", "غذایی که ازش متنفری چیه؟",
+  "اگه یه روز کامل خونه خالی بود و هیچ کاری نداشتیم، چیکار می‌کردیم؟", "بهترین فیلمی که تا حالا دیدی چیه؟", "چیزی که همیشه دلت می‌خواسته بپوشی ولی نپوشیدی چیه؟",
+  "به نظرت اگه توی یه فیلم بودیم، چه ژانری بود؟", "اگه یه حیوون می‌شدیم، هر کدوممون چه حیوونی بودیم؟", "صبح‌ها زود بیدار میشی یا شب‌ها دیر می‌خوابی؟",
+  "کتاب یا فیلم؟ کدوم رو بیشتر دوست داری؟", "اگه یه روز تمام پول دنیا رو داشتی، اولین کاری که می‌کردی چی بود؟", "یه سرگرمی یا هنری که دوست داری یاد بگیری چیه؟",
+  "اگه می‌تونستی یه جای دنیا رو برای زندگی انتخاب کنی، کجا می‌رفتی؟", "بهترین هدیه‌ای که تا حالا گرفتی چی بود؟", "چیزی که هیچ‌وقت ازش سیر نمیشی چیه؟ (مثلاً یه سریال، یه غذا، یه کار)",
+  "اگه یه روز خودت رو جای من می‌دیدی، اولین کاری که توی زندگیم می‌کردی چی بود؟", "یه چیز بامزه یا عجیب که توی گوشیت داری چیه؟", "عجیب‌ترین چیزی که توی یخچالت داری چیه؟",
+  "اگه یه سوپرپاور داشتی که فقط یک بار می‌تونستی استفاده کنی، چیکار می‌کردی؟", "بزرگترین تفریحی که توی یه روز بارونی دوست داری انجام بدی چیه؟", "اگه بخوای یه روز رو ۱۰۰ بار تکرار کنی، کدوم روزه؟",
+  "بهترین تعریفی که یه نفر ازت کرده چی بود؟", "چیزی که باعث میشه سریع بخندی چیه؟", "اگه قرار بود یه آهنگ برای زندگیت بسازی، اسمش چی بود؟",
+  "چه سوالی دوست داشتی ازت پرسیده بشه ولی هیچ‌کس نپرسیده؟"
+];
+
+// ==========================================
+// ۴. لیست ۱۰۰ تایی جرات (تماس، عکس، شیطنت)
+// ==========================================
+const daresData = [
+  "الان همین لحظه بهم زنگ بزن و ۱ دقیقه با هم حرف بزنیم. 📞", "الان بهم تماس تصویری بزن و ۳۰ ثانیه بدون اینکه چیزی بگی فقط لبخند بزن. 📹", "به من زنگ بزن و با صدای بچگانه ۱ دقیقه حرف بزن. 👶",
+  "تماس تصویری بگیر و ادای من رو دربیار تا حدس بزنم. 🎭", "الان بهم زنگ بزن و توی گوشی یه آهنگ برام بخون. 🎵", "تماس تصویری بگیر و ۲۰ ثانیه یه حرکت خنده‌دار (مثل رقص) انجام بده. 🕺",
+  "الان بهم زنگ بزن و بگو چرا منو دوست داری. ❤️", "تماس تصویری بگیر و حالتت رو شبیه یه گربه (یا حیوون دیگه) کن. 🐱", "به من زنگ بزن و ۱ دقیقه سکوت کن؛ فقط به هم نگاه کنیم (تماس تصویری). 👀",
+  "تماس تصویری بگیر و بهم بگو امروز چه خبرای خوبی برات بوده. ☀️", "الان زنگ بزن و با صدای پیرمرد/پیرزن ۳۰ ثانیه حرف بزن. 👴", "تماس تصویری بگیر و سعی کن ۳۰ ثانیه منو بخندونی. 😂",
+  "الان به من زنگ بزن و تندترین جمله‌ای که می‌تونی رو ۳ بار پشت سر هم بگو. 🗣️", "تماس تصویری بگیر و یه هدیه خیالی بهم تقدیم کن. 🎁", "زنگ بزن و ۱۰ ثانیه با صدای خیلی آروم و مرموز حرف بزن. 🕵️‍♂️",
+  "تماس تصویری بگیر و ۳۰ ثانیه خودت رو جای من فرض کن و حرف بزن. 🙋‍♂️", "الان بهم زنگ بزن و بگو بزرگترین آرزوت چیه. 🌠", "تماس تصویری بگیر و برام یه لطیفه تعریف کن (حتی اگه تکراریه). 🃏",
+  "به من زنگ بزن و با آهنگ یه فیلم معروف، ۲۰ ثانیه بخون. 🎬", "تماس تصویری بگیر و ۱۰ ثانیه با یه لهجه (شمالی، اصفهانی و...) حرف بزن. 🗺️", "یه عکس سلفی از خودت با حالت شاد و خندان بفرست. 😄",
+  "یه عکس سلفی با حالت غمگین و لوس بفرست. 🥺", "یه عکس سلفی با حالت ناراحت بفرست. 😞", "یه عکس سلفی با حالت عصبانی و اخم‌آلود بفرست. 😠",
+  "یه عکس از غذایی که الان داری می‌خوری (یا دوست داری بخوری) بفرست. 🍕", "یه سلفی با حالت خواب‌آلود (شبیه کسی که تازه بیدار شده) بفرست. 😴", "یه عکس از چیزی که الان دقیقاً جلوی چشمت هست بفرست. 👁️",
+  "یه سلفی با حالت ترسیده و شوکه بفرست. 😱", "یه عکس از کفش‌هایی که الان پات هست بفرست. 👟", "یه عکس از آسمون (یا سقف) که همین الان بالای سرته بگیر و بفرست. ☁️",
+  "یه عکس از هدفت (نوشیدنی) بفرست. ☕", "یه عکس از یه وسیله توی اتاقت که برات عزیزه بفرست. 🧸", "یه سلفی خیلی ادایی و ژست‌دار بفرست (مدل عکاسی فشن). 💅",
+  "یه عکس از دست‌هات بفرست. 🖐️", "یه عکس از هاردیسک یا یخچالت (در حالت باز) بفرست. 🧊", "یه عکس با حالتی که انگار داری گریه می‌کنی بفرست. 😭",
+  "یه سلفی با یه وسیله‌ای که روی سرت گذاشتی (مثل کلاه، قابلمه و...) بفرست. 🍳", "یه عکس از منظره‌ای که الان از پنجره می‌بینی بفرست. 🪟", "یه عکس بفرست که توش یک چیز قرمز پیدا باشه. 🔴",
+  "یه سلفی با حالت بامزه (ادای یه شخصیت کارتونی) بفرست. 🐭", "یه عکس از یه چیزی که امروز خریدی بفرست (حتی اگه خیلی کوچیک باشه). 🛍️", "یه عکس از پای عروسکت یا حیوون خونگیت (اگه نداری، یه وسیله) بفرست. 🐾",
+  "یه سلفی با حالت فکری و متفکر بفرست. 🤔", "یه عکس از تختت بفرست. 🛏️", "یه سلفی با حالت شیطون و چشمک بفرست. 😉",
+  "یه عکس از یه چیز کج و کوله یا به‌هم‌ریخته توی خونه بفرست. 🌀", "یه عکس از آینه بفرست (بدون اینکه صورتت کامل معلوم باشه). 🪞", "یه سلفی با حالت تعجب‌زده بفرست. 😲",
+  "یه عکس از یه تیکه از لباست که الان تنت هست بفرست. 👕", "یه عکس از هر چیزی که رنگش آبیه بفرست. 🔵", "یه وویس ۲۰ ثانیه‌ای بفرست و توش فقط با خنده حرف بزن. 😂",
+  "یه وویس بفرست و توش یه آهنگ بخون. 🎤", "یه وویس بفرست و با صدای خیلی نازک و بچگانه حرف بزن. 👶", "یه وویس بفرست و یه راز کوچیک از خودت رو لو بده. 🤫",
+  "یه وویس بفرست و توش منو (به شوخی) مسخره کن. 😜", "یه وویس بفرست و بگو «ببخشید» با یه لحن خیلی احساسی. 🥺", "یه وویس ۱۰ ثانیه‌ای بفرست و توش فقط سکوت کن. 🤐",
+  "یه وویس بفرست و توش ۵ تا حیوون رو با صداشون تقلید کن. 🦁", "یه وویس بفرست و توش با یه لهجه غلیظ حرف بزن. 🗣️", "یه وویس بفرست و توش یه شعر طنز بخون. 📜",
+  "یه وویس بفرست و بگو چرا الان خسته‌ای. 😮‍💨", "یه وویس بفرست و توش یه چیزی رو با عصبانیت (الکی) بگو. 😠", "یه وویس بفرست و توش اسم منو ۱۰ بار پشت سر هم صدا بزن. 📣",
+  "یه وویس بفرست و توش یک دقیقه تعریف کن که امروز چیکار کردی. 📅", "یه وویس بفرست و با صدای گریه‌دار (الکی) حرف بزن. 😭", "همین الان ۱۰ تا شنا (یا اسکات) برو. 🏋️‍♂️",
+  "یه لیوان آب بریز روی صورتت (یا حداقل دستت). 💦", "۱ دقیقه روی یک پا بایست. 🦩", "برو یه بستنی یا شکلات بخور و عکسش رو بفرست. 🍦",
+  "یه رقص ۱۵ ثانیه‌ای انجام بده و از خودت فیلم بگیر. 🕺", "از جات بپر بالا و وقتی پایین اومدی بگو «گربه!». 🐈", "یه بالش رو ۱۰ بار پرت کن هوا. 🛏️",
+  "برو یه چیزی از اتاقت بردار که خیلی عجیبه و بیار نشونم بده. 👽", "ادای ۳ تا حیوون رو دربیار (فیلم بگیر). 🐒", "۱۰ ثانیه با یه حالت صورت خیلی عجیب بمون (فیلم بگیر). 🤪",
+  "یه کاغذ بردار و یه نقاشی ۲۰ ثانیه‌ای از من بکش. 🎨", "برو یه لیوان آب بخور، فقط با یه نفس! 💧", "دستات رو ۱۰ ثانیه روی یخ بذار (اگه توی یخچال یخ داری). 🧊",
+  "برای ۱ دقیقه مثل ربات راه برو (فیلم بگیر). 🤖", "همین الان یه حرکات ورزشی عجیب (مثل یوگا) انجام بده. 🧘‍♂️", "اسم منو توی گوشیت به یه اسم خنده‌دار تغییر بده و اسکرین‌شات بفرست. 📱",
+  "به آخرین نفر توی لیست مخاطبینت یه پیام «سلام» بفرست. 📨", "۵ تا ایموجی بفرست که حال الانتو نشون بده. 😊", "یه استاتوس (وضعیت) بذار که توش اسم من باشه. 📢",
+  "اسم منو توی بایو (بیوگرافی) واتساپت بذار و ۱۰ دقیقه برندار. 📝", "یه پیام عاشقانه یا خیلی احساسی برام تایپ کن و بفرست. ❤️", "توی گوگل سرچ کن «چطور یه نفر رو بخندونیم» و اولین نتیجه رو برام بفرست. 🔍",
+  "اسم ۵ تا از دوستات رو بفرست که فکر می‌کنی شبیه من هستن. 👯‍♂️", "یه عکس از پروفایل واتساپت بگیر و بفرست. 🖼️", "برای من یه شعر ۴ خطی بنویس و بفرست. ✍️",
+  "آخرین عکسی که توی گالریت (یا سیو) هست رو بفرست. 🖼️", "یه پیام به یه دوستت بفرست و بگو «دلم برات تنگ شده» (اسکرین‌شات بفرست). 💌", "توی تقویم گوشیت برای فردا یه یادداشت بنویس «به فردین/مژگان زنگ بزن». 📅",
+  "اسم ۳ تا از ویژگی‌های خوب خودت رو بفرست. 🌟", "بگو بزرگترین حسرت زندگیت چیه. 🌧️", "یه ایموجی بفرست که هیچ‌وقت ازش استفاده نمی‌کنی. 🦄",
+  "صدای زنگ گوشیت چیه؟ بگو. 🔔", "آخرین بار کِی گریه کردی و چرا؟ 😢", "یه جمله به انگلیسی بفرست که معنیش رو دوست داری. 🇬🇧",
+  "به من بگو اگه قرار بود فردا بمیرم، اولین کاری که می‌کردی چی بود؟ ⏳"
+];
+
+// ==========================================
+// ۵. دکمه‌های ورود (فردین و مژگان)
+// ==========================================
+document.getElementById('hostBtn').onclick = () => {
+  myRole = 'host';
+  currentRoom = Math.random().toString(36).substring(2, 8).toUpperCase();
+  
+  document.getElementById('connectPanel').classList.add('hidden');
+  gameSection.classList.remove('hidden');
+  
+  roomInfoBox.classList.remove('hidden');
+  document.getElementById('roomCodeDisplay').innerText = currentRoom;
+  waitStatusText.innerText = 'در انتظار ورود مژگان...';
+  waitStatusText.style.color = 'var(--gold)';
+  
+  spinBtn.disabled = true;
+  spinBtn.innerText = 'در انتظار نفر دوم...';
+  cardBox.innerText = 'کد اتاق را برای مژگان بفرست. به محض ورود، بازی شروع می‌شود.';
+  
+  connectToSupabase();
+};
+
+document.getElementById('joinRoomBtn').onclick = () => {
+  const code = document.getElementById('roomCodeIn').value.trim().toUpperCase();
+  if (code.length < 4) {
+    alert('لطفاً یک کد معتبر وارد کنید!');
+    return;
+  }
+  myRole = 'guest';
+  currentRoom = code;
+  
+  document.getElementById('connectPanel').classList.add('hidden');
+  gameSection.classList.remove('hidden');
+  
+  roomInfoBox.classList.remove('hidden');
+  document.getElementById('roomCodeDisplay').innerText = currentRoom;
+  waitStatusText.innerText = 'در حال اتصال به اتاق...';
+  waitStatusText.style.color = 'var(--gold)';
+  
+  spinBtn.disabled = true;
+  spinBtn.innerText = 'در حال اتصال...';
+  cardBox.innerText = 'لطفاً صبر کنید...';
+  
+  connectToSupabase();
+};
+
+// ==========================================
+// ۶. اتصال به Supabase Realtime
+// ==========================================
+function connectToSupabase() {
+  channel = supabaseClient.channel('room-' + currentRoom, {
+    config: { presence: { key: myRole } }
+  });
+
+  channel
+    .on('broadcast', { event: 'game_action' }, (payload) => {
+      handleOpponentAction(payload.payload);
+    })
+    .on('presence', { event: 'sync' }, () => {
+      const state = channel.presenceState();
+      const playersCount = Object.keys(state).length;
+      
+      if (playersCount >= 2) {
+        if (!isConnected) {
+          isConnected = true;
+          roomInfoBox.classList.add('hidden'); // مخفی کردن کد اتاق
+          cardBox.innerText = 'بازی شروع شد! گردونه را بچرخان.';
+          
+          // فردین (میزبان) همیشه اول بازی رو شروع میکنه
+          if (myRole === 'host') setTurn(true);
+          else setTurn(false);
+        }
+      } else {
+        if (myRole === 'host') waitStatusText.innerText = 'در انتظار ورود مژگان...';
+        else waitStatusText.innerText = 'در انتظار ورود فردین...';
+      }
+    })
+    .subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await channel.track({ role: myRole });
+      }
+    });
+}
+
+// ==========================================
+// ۷. مدیریت نوبت
+// ==========================================
+function setTurn(isMe) {
+  isMyTurn = isMe;
+  spinBtn.disabled = !isMe;
+  spinBtn.innerText = isMe ? 'بچرخون!' : 'نوبت حریف است...';
+  
+  const p1 = document.getElementById('player1');
+  const p2 = document.getElementById('player2');
+  
+  if (myRole === 'host') {
+    if (isMe) { p1.classList.add('active'); p2.classList.remove('active'); }
+    else { p1.classList.remove('active'); p2.classList.add('active'); }
+  } else {
+    if (isMe) { p2.classList.add('active'); p1.classList.remove('active'); }
+    else { p2.classList.remove('active'); p1.classList.add('active'); }
+  }
+}
+
+// ==========================================
+// ۸. چرخاندن گردونه و انتخاب از لیست‌ها
+// ==========================================
+spinBtn.onclick = () => {
+  if (!isMyTurn) return;
+  
+  setTurn(false); // دکمه خودم رو قفل میکنم
+  cardBox.innerText = "در حال چرخش...";
+  
+  // انتخاب تصادفی نتیجه گردونه (0: سوال، 1: جریمه، 2: امتیاز، 3: چالش)
+  const resultIndex = Math.floor(Math.random() * 4);
+  
+  let cardText = "";
+  let scoreChange = 0;
+  
+  if (resultIndex === 0) {
+    // سوال (حقیقت)
+    cardText = truthsData[Math.floor(Math.random() * truthsData.length)];
+  } else if (resultIndex === 1) {
+    // جریمه
+    scoreChange = -1;
+    cardText = "یک امتیاز از دست دادی! 📉";
+  } else if (resultIndex === 2) {
+    // امتیاز
+    scoreChange = 1;
+    cardText = "یک امتیاز جایزه گرفتی! 🎁";
+  } else if (resultIndex === 3) {
+    // چالش (جرات)
+    cardText = daresData[Math.floor(Math.random() * daresData.length)];
+  }
+  
+  // ارسال به حریف
+  channel.send({
+    type: 'broadcast',
+    event: 'game_action',
+    payload: { type: 'spin_result', resultIndex, cardText, scoreChange }
+  });
+  
+  // اجرای انیمیشن روی گوشی خودم
+  animateWheel(resultIndex, cardText, scoreChange, true);
+};
+
+function animateWheel(resultIndex, cardText, scoreChange, isMe) {
+  // چرخش گردونه
+  currentRotation += (360 * 4) + (resultIndex * 90); 
+  wheel.style.transform = `rotate(${currentRotation}deg)`;
+  
+  // بعد از ۳ ثانیه که چرخش تموم شد:
+  setTimeout(() => {
+    const resultTitle = ["حقیقت 💭", "جریمه 📉", "امتیاز 🎁", "جرات 🔥"][resultIndex];
+    cardBox.innerText = `${resultTitle}\n\n${cardText}`;
+    
+    // آپدیت امتیاز
+    if (scoreChange !== 0) {
+      if (isMe) myScore += scoreChange;
+      else oppScore += scoreChange;
+      updateScores();
+    }
+    
+    // فقط کسی که گردونه رو چرخونده اجازه داره نوبت رو رد کنه
+    if (isMe && channel) {
+      channel.send({
+        type: 'broadcast',
+        event: 'game_action',
+        payload: { type: 'turn_change' }
+      });
+    }
+    
+  }, 3100); 
+}
+
+// ==========================================
+// ۹. دریافت حرکات از حریف
+// ==========================================
+function handleOpponentAction(payload) {
+  if (payload.type === 'spin_result') {
+    setTurn(false);
+    animateWheel(payload.resultIndex, payload.cardText, payload.scoreChange, false);
+  } 
+  else if (payload.type === 'turn_change') {
+    setTurn(true); // حالا نوبت منه
+  }
+}
+
+// ==========================================
+// ۱۰. آپدیت امتیازها
+// ==========================================
+function updateScores() {
+  if (myRole === 'host') {
+    document.getElementById('score1').innerText = myScore;
+    document.getElementById('score2').innerText = oppScore;
+  } else {
+    document.getElementById('score1').innerText = oppScore;
+    document.getElementById('score2').innerText = myScore;
+  }
+}
+</script>
+</body>
+</html>
