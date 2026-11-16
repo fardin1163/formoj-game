@@ -31,6 +31,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .wheel:after{content:"";position:absolute;top:-16px;border-left:12px solid transparent;border-right:12px solid transparent;border-top:0;border-bottom:22px solid var(--gold)}
 .wheel span{background:#211b35;padding:17px;border-radius:50%;font-weight:bold;z-index:10}
 .card{min-height:120px;display:grid;place-items:center;text-align:center;background:#171326;border:1px dashed var(--gold);border-radius:15px;padding:18px;font-size:16px;line-height:1.8;margin-top:15px;white-space:pre-wrap}
+
+/* استایل‌های کادر چت */
+.chat-container{margin-top:20px;border-top:1px solid var(--line);padding-top:15px;}
+.chat-messages{height:150px;overflow-y:auto;background:#171326;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;font-size:14px}
+.msg{max-width:80%;padding:8px 12px;border-radius:12px;line-height:1.4;word-wrap:break-word;}
+.msg.me{align-self:flex-start;background:var(--gold);color:#24182e;border-bottom-right-radius:2px;}
+.msg.opp{align-self:flex-end;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:2px;}
+.chat-input-area{display:flex;gap:8px;}
+.chat-input-area input{margin:0;text-align:right;letter-spacing:0;font-size:14px;border-radius:12px;}
+.chat-input-area button{width:auto;margin:0;padding:0 20px;background:var(--green);color:#171326;}
 </style>
 </head>
 <body><main>
@@ -40,23 +50,17 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <!-- بخش اتصال -->
 <section class="panel" id="connectPanel">
   <h2>ورود به بازی</h2>
-  
   <button id="hostBtn">من فردین هستم (ساخت اتاق جدید)</button>
-  
   <hr style="border-color:var(--line); margin:20px 0;">
-  
   <p class="muted" style="text-align:center">اگر مژگان هستی، کد اتاق را اینجا وارد کن:</p>
   <input type="text" id="roomCodeIn" placeholder="کد اتاق (مثلاً A7K9Q2)" style="text-transform:uppercase">
   <button id="joinRoomBtn" class="join">ورود به اتاق</button>
-  
   <div class="status" id="connStatus" style="margin-top:15px">هنوز به اتاقی وصل نشده‌اید.</div>
 </section>
 
 <!-- بخش اصلی بازی -->
 <section id="game" class="hidden">
   <section class="panel">
-    
-    <!-- وضعیت اتصال و کد اتاق -->
     <div class="status" id="roomInfo" style="margin-bottom:15px; border-color:var(--gold)">
       کد اتاق شما: <b id="roomCodeDisplay" style="font-size: 20px; letter-spacing: 2px; color: var(--gold);"></b><br>
       <span id="waitStatusText" style="font-size: 14px; margin-top:5px; display:block;">در انتظار ورود نفر دوم...</span>
@@ -74,9 +78,17 @@ button:disabled{opacity:.45;cursor:not-allowed}
     </div>
 
     <div class="card" id="cardBox">منتظر شروع بازی...</div>
+
+    <!-- کادر چت آنلاین -->
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="پیامی بنویسید..." style="text-transform:none; letter-spacing:0;">
+        <button id="sendChatBtn">ارسال</button>
+      </div>
+    </div>
   </section>
 </section>
-
 </main>
 
 <script>
@@ -91,7 +103,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ۲. متغیرهای بازی
 // ==========================================
 let channel = null;
-let myRole = null; // 'host' (فردین) یا 'guest' (مژگان)
+let myRole = null;
 let currentRoom = null;
 let isMyTurn = false;
 let myScore = 0;
@@ -106,8 +118,13 @@ const wheel = document.getElementById('wheel');
 const waitStatusText = document.getElementById('waitStatusText');
 const roomInfoBox = document.getElementById('roomInfo');
 
+// المان‌های چت
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const sendChatBtn = document.getElementById('sendChatBtn');
+
 // ==========================================
-// ۳. لیست ۱۰۰ تایی حقیقت (بدون موارد حساس)
+// ۳. لیست کامل حقیقت (۱۰۰ مورد)
 // ==========================================
 const truthsData = [
   "بزرگترین ترست توی زندگی چیه؟", "بزرگترین آرزوت چیه؟", "یه رازی که تا حالا به هیچ‌کس نگفتی رو بگو.",
@@ -147,7 +164,7 @@ const truthsData = [
 ];
 
 // ==========================================
-// ۴. لیست ۱۰۰ تایی جرات (تماس، عکس، شیطنت)
+// ۴. لیست کامل جرات (۱۰۰ مورد)
 // ==========================================
 const daresData = [
   "الان همین لحظه بهم زنگ بزن و ۱ دقیقه با هم حرف بزنیم. 📞", "الان بهم تماس تصویری بزن و ۳۰ ثانیه بدون اینکه چیزی بگی فقط لبخند بزن. 📹", "به من زنگ بزن و با صدای بچگانه ۱ دقیقه حرف بزن. 👶",
@@ -187,53 +204,40 @@ const daresData = [
 ];
 
 // ==========================================
-// ۵. دکمه‌های ورود (فردین و مژگان)
+// ۵. دکمه‌های ورود
 // ==========================================
 document.getElementById('hostBtn').onclick = () => {
   myRole = 'host';
   currentRoom = Math.random().toString(36).substring(2, 8).toUpperCase();
-  
   document.getElementById('connectPanel').classList.add('hidden');
   gameSection.classList.remove('hidden');
-  
   roomInfoBox.classList.remove('hidden');
   document.getElementById('roomCodeDisplay').innerText = currentRoom;
   waitStatusText.innerText = 'در انتظار ورود مژگان...';
-  waitStatusText.style.color = 'var(--gold)';
-  
   spinBtn.disabled = true;
   spinBtn.innerText = 'در انتظار نفر دوم...';
-  cardBox.innerText = 'کد اتاق را برای مژگان بفرست. به محض ورود، بازی شروع می‌شود.';
-  
+  cardBox.innerText = 'کد اتاق را برای مژگان بفرست.';
   connectToSupabase();
 };
 
 document.getElementById('joinRoomBtn').onclick = () => {
   const code = document.getElementById('roomCodeIn').value.trim().toUpperCase();
-  if (code.length < 4) {
-    alert('لطفاً یک کد معتبر وارد کنید!');
-    return;
-  }
+  if (code.length < 4) return alert('لطفاً یک کد معتبر وارد کنید!');
   myRole = 'guest';
   currentRoom = code;
-  
   document.getElementById('connectPanel').classList.add('hidden');
   gameSection.classList.remove('hidden');
-  
   roomInfoBox.classList.remove('hidden');
   document.getElementById('roomCodeDisplay').innerText = currentRoom;
   waitStatusText.innerText = 'در حال اتصال به اتاق...';
-  waitStatusText.style.color = 'var(--gold)';
-  
   spinBtn.disabled = true;
   spinBtn.innerText = 'در حال اتصال...';
   cardBox.innerText = 'لطفاً صبر کنید...';
-  
   connectToSupabase();
 };
 
 // ==========================================
-// ۶. اتصال به Supabase Realtime
+// ۶. اتصال به Supabase (بازی + چت)
 // ==========================================
 function connectToSupabase() {
   channel = supabaseClient.channel('room-' + currentRoom, {
@@ -244,23 +248,19 @@ function connectToSupabase() {
     .on('broadcast', { event: 'game_action' }, (payload) => {
       handleOpponentAction(payload.payload);
     })
+    .on('broadcast', { event: 'chat_message' }, (payload) => {
+      appendChatMessage(payload.payload.text, 'opp');
+    })
     .on('presence', { event: 'sync' }, () => {
-      const state = channel.presenceState();
-      const playersCount = Object.keys(state).length;
-      
+      const playersCount = Object.keys(channel.presenceState()).length;
       if (playersCount >= 2) {
         if (!isConnected) {
           isConnected = true;
-          roomInfoBox.classList.add('hidden'); // مخفی کردن کد اتاق
+          roomInfoBox.classList.add('hidden');
           cardBox.innerText = 'بازی شروع شد! گردونه را بچرخان.';
-          
-          // فردین (میزبان) همیشه اول بازی رو شروع میکنه
           if (myRole === 'host') setTurn(true);
           else setTurn(false);
         }
-      } else {
-        if (myRole === 'host') waitStatusText.innerText = 'در انتظار ورود مژگان...';
-        else waitStatusText.innerText = 'در انتظار ورود فردین...';
       }
     })
     .subscribe(async (status) => {
@@ -271,112 +271,99 @@ function connectToSupabase() {
 }
 
 // ==========================================
-// ۷. مدیریت نوبت
+// ۷. منطق چت
+// ==========================================
+function sendChatMessage() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  chatInput.value = '';
+  appendChatMessage(text, 'me');
+  if (channel && isConnected) {
+    channel.send({
+      type: 'broadcast',
+      event: 'chat_message',
+      payload: { text: text }
+    });
+  }
+}
+
+sendChatBtn.onclick = sendChatMessage;
+chatInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') sendChatMessage();
+});
+
+function appendChatMessage(text, who) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + who;
+  div.innerText = text;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// ==========================================
+// ۸. منطق نوبت و گردونه
 // ==========================================
 function setTurn(isMe) {
   isMyTurn = isMe;
   spinBtn.disabled = !isMe;
   spinBtn.innerText = isMe ? 'بچرخون!' : 'نوبت حریف است...';
-  
   const p1 = document.getElementById('player1');
   const p2 = document.getElementById('player2');
-  
   if (myRole === 'host') {
-    if (isMe) { p1.classList.add('active'); p2.classList.remove('active'); }
-    else { p1.classList.remove('active'); p2.classList.add('active'); }
+    p1.classList.toggle('active', isMe); p2.classList.toggle('active', !isMe);
   } else {
-    if (isMe) { p2.classList.add('active'); p1.classList.remove('active'); }
-    else { p2.classList.remove('active'); p1.classList.add('active'); }
+    p2.classList.toggle('active', isMe); p1.classList.toggle('active', !isMe);
   }
 }
 
-// ==========================================
-// ۸. چرخاندن گردونه و انتخاب از لیست‌ها
-// ==========================================
 spinBtn.onclick = () => {
   if (!isMyTurn) return;
-  
-  setTurn(false); // دکمه خودم رو قفل میکنم
+  setTurn(false);
   cardBox.innerText = "در حال چرخش...";
   
-  // انتخاب تصادفی نتیجه گردونه (0: سوال، 1: جریمه، 2: امتیاز، 3: چالش)
   const resultIndex = Math.floor(Math.random() * 4);
+  let cardText = "", scoreChange = 0;
   
-  let cardText = "";
-  let scoreChange = 0;
+  if (resultIndex === 0) cardText = truthsData[Math.floor(Math.random() * truthsData.length)];
+  else if (resultIndex === 1) { scoreChange = -1; cardText = "یک امتیاز از دست دادی! 📉"; }
+  else if (resultIndex === 2) { scoreChange = 1; cardText = "یک امتیاز جایزه گرفتی! 🎁"; }
+  else if (resultIndex === 3) cardText = daresData[Math.floor(Math.random() * daresData.length)];
   
-  if (resultIndex === 0) {
-    // سوال (حقیقت)
-    cardText = truthsData[Math.floor(Math.random() * truthsData.length)];
-  } else if (resultIndex === 1) {
-    // جریمه
-    scoreChange = -1;
-    cardText = "یک امتیاز از دست دادی! 📉";
-  } else if (resultIndex === 2) {
-    // امتیاز
-    scoreChange = 1;
-    cardText = "یک امتیاز جایزه گرفتی! 🎁";
-  } else if (resultIndex === 3) {
-    // چالش (جرات)
-    cardText = daresData[Math.floor(Math.random() * daresData.length)];
-  }
-  
-  // ارسال به حریف
   channel.send({
     type: 'broadcast',
     event: 'game_action',
     payload: { type: 'spin_result', resultIndex, cardText, scoreChange }
   });
   
-  // اجرای انیمیشن روی گوشی خودم
   animateWheel(resultIndex, cardText, scoreChange, true);
 };
 
 function animateWheel(resultIndex, cardText, scoreChange, isMe) {
-  // چرخش گردونه
   currentRotation += (360 * 4) + (resultIndex * 90); 
   wheel.style.transform = `rotate(${currentRotation}deg)`;
   
-  // بعد از ۳ ثانیه که چرخش تموم شد:
   setTimeout(() => {
     const resultTitle = ["حقیقت 💭", "جریمه 📉", "امتیاز 🎁", "جرات 🔥"][resultIndex];
     cardBox.innerText = `${resultTitle}\n\n${cardText}`;
-    
-    // آپدیت امتیاز
     if (scoreChange !== 0) {
-      if (isMe) myScore += scoreChange;
-      else oppScore += scoreChange;
+      if (isMe) myScore += scoreChange; else oppScore += scoreChange;
       updateScores();
     }
-    
-    // فقط کسی که گردونه رو چرخونده اجازه داره نوبت رو رد کنه
     if (isMe && channel) {
-      channel.send({
-        type: 'broadcast',
-        event: 'game_action',
-        payload: { type: 'turn_change' }
-      });
+      channel.send({ type: 'broadcast', event: 'game_action', payload: { type: 'turn_change' } });
     }
-    
   }, 3100); 
 }
 
-// ==========================================
-// ۹. دریافت حرکات از حریف
-// ==========================================
 function handleOpponentAction(payload) {
   if (payload.type === 'spin_result') {
     setTurn(false);
     animateWheel(payload.resultIndex, payload.cardText, payload.scoreChange, false);
-  } 
-  else if (payload.type === 'turn_change') {
-    setTurn(true); // حالا نوبت منه
+  } else if (payload.type === 'turn_change') {
+    setTurn(true);
   }
 }
 
-// ==========================================
-// ۱۰. آپدیت امتیازها
-// ==========================================
 function updateScores() {
   if (myRole === 'host') {
     document.getElementById('score1').innerText = myScore;
