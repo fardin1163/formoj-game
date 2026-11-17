@@ -6,7 +6,7 @@
 <title>فُرمُژ | بازی دونفره آنلاین</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* 🎨 تم جدید: روزانه، لطیف و مدرن */
+/* 🎨 تم روشن و لطیف */
 :root{
   --bg-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
   --panel: #ffffff;
@@ -21,7 +21,7 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg-gradient);color:var(--ink);font-family:Tahoma,Arial,sans-serif;min-height:100vh}
 main{max-width:760px;margin:auto;padding:18px 14px 36px}
-.brand{text-align:center;padding:12px 0 18px}
+.brand{text-align:center;padding:12px 0 18px;transition: 0.3s;}
 .brand h1{font-size:32px;margin:0;color:var(--pink);letter-spacing:1px;text-shadow: 0 2px 4px rgba(255,118,117,0.2)}
 .brand p{margin:8px 0 0;color:var(--muted);font-size:13px}
 
@@ -68,7 +68,8 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </head>
 <body><main>
 
-<header class="brand"><h1>فُرمُژ</h1><p>بازی دونفره آنلاین · حقیقت یا جرات 🎭</p></header>
+<!-- هدر صفحه (با ورود به بازی مخفی میشود) -->
+<header class="brand" id="mainHeader"><h1>فُرمُژ</h1><p>بازی دونفره آنلاین · حقیقت یا جرات 🎭</p></header>
 
 <section class="panel" id="connectPanel">
   <h2>ورود به بازی</h2>
@@ -123,6 +124,7 @@ let channel = null, myRole = null, currentRoom = null, isMyTurn = false, current
 let isSoundOn = true;
 
 const gameSection = document.getElementById('game');
+const mainHeader = document.getElementById('mainHeader');
 const spinBtn = document.getElementById('spinBtn');
 const muteBtn = document.getElementById('muteBtn');
 const cardBox = document.getElementById('cardBox');
@@ -140,37 +142,21 @@ const audioCtx = new AudioContext();
 function playSound(type) {
   if (!isSoundOn) return;
   if (audioCtx.state === 'suspended') audioCtx.resume();
-  
   const osc = audioCtx.createOscillator();
   const gainNode = audioCtx.createGain();
-  osc.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  
+  osc.connect(gainNode); gainNode.connect(audioCtx.destination);
   const now = audioCtx.currentTime;
-
   if (type === 'spin') {
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(600, now);
-    osc.frequency.exponentialRampToValueAtTime(100, now + 3);
-    gainNode.gain.setValueAtTime(0.3, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 3);
-    osc.start(now);
-    osc.stop(now + 3);
+    osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(100, now + 3);
+    gainNode.gain.setValueAtTime(0.3, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 3);
+    osc.start(now); osc.stop(now + 3);
   } else if (type === 'result') {
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(523.25, now); 
-    osc.frequency.setValueAtTime(659.25, now + 0.1); 
-    gainNode.gain.setValueAtTime(0.5, now);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-    osc.start(now);
-    osc.stop(now + 0.5);
+    osc.type = 'triangle'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(659.25, now + 0.1); 
+    gainNode.gain.setValueAtTime(0.5, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    osc.start(now); osc.stop(now + 0.5);
   }
 }
-
-muteBtn.onclick = () => {
-  isSoundOn = !isSoundOn;
-  muteBtn.innerText = isSoundOn ? '🔊' : '🔇';
-};
+muteBtn.onclick = () => { isSoundOn = !isSoundOn; muteBtn.innerText = isSoundOn ? '🔊' : '🔇'; };
 
 // لیست‌ها
 const truthsData = [
@@ -181,9 +167,17 @@ const daresData = [
   "الان همین لحظه بهم زنگ بزن و ۱ دقیقه با هم حرف بزنیم. 📞", "الان بهم تماس تصویری بزن و ۳۰ ثانیه بدون اینکه چیزی بگی فقط لبخند بزن. 📹", "به من زنگ بزن و با صدای بچگانه ۱ دقیقه حرف بزن. 👶", "تماس تصویری بگیر و ادای من رو دربیار تا حدس بزنم. 🎭", "الان بهم زنگ بزن و توی گوشی یه آهنگ برام بخون. 🎵", "تماس تصویری بگیر و ۲۰ ثانیه یه حرکت خنده‌دار (مثل رقص) انجام بده. 🕺", "الان بهم زنگ بزن و بگو چرا منو دوست داری. ❤️", "تماس تصویری بگیر و حالتت رو شبیه یه گربه (یا حیوون دیگه) کن. 🐱", "به من زنگ بزن و ۱ دقیقه سکوت کن؛ فقط به هم نگاه کنیم (تماس تصویری). 👀", "تماس تصویری بگیر و بهم بگو امروز چه خبرای خوبی برات بوده. ☀️", "الان زنگ بزن و با صدای پیرمرد/پیرزن ۳۰ ثانیه حرف بزن. 👴", "تماس تصویری بگیر و سعی کن ۳۰ ثانیه منو بخندونی. 😂", "الان به من زنگ بزن و تندترین جمله‌ای که می‌تونی رو ۳ بار پشت سر هم بگو. 🗣️", "تماس تصویری بگیر و یه هدیه خیالی بهم تقدیم کن. 🎁", "زنگ بزن و ۱۰ ثانیه با صدای خیلی آروم و مرموز حرف بزن. 🕵️‍♂️", "تماس تصویری بگیر و ۳۰ ثانیه خودت رو جای من فرض کن و حرف بزن. 🙋‍♂️", "الان بهم زنگ بزن و بگو بزرگترین آرزوت چیه. 🌠", "تماس تصویری بگیر و برام یه لطیفه تعریف کن (حتی اگه تکراریه). 🃏", "به من زنگ بزن و با آهنگ یه فیلم معروف، ۲۰ ثانیه بخون. 🎬", "تماس تصویری بگیر و ۱۰ ثانیه با یه لهجه (شمالی، اصفهانی و...) حرف بزن. 🗺️", "یه عکس سلفی از خودت با حالت شاد و خندان بفرست. 😄", "یه عکس سلفی با حالت غمگین و لوس بفرست. 🥺", "یه عکس سلفی با حالت ناراحت بفرست. 😞", "یه عکس سلفی با حالت عصبانی و اخم‌آلود بفرست. 😠", "یه عکس از غذایی که الان داری می‌خوری (یا دوست داری بخوری) بفرست. 🍕", "یه سلفی با حالت خواب‌آلود (شبیه کسی که تازه بیدار شده) بفرست. 😴", "یه عکس از چیزی که الان دقیقاً جلوی چشمت هست بفرست. 👁️", "یه سلفی با حالت ترسیده و شوکه بفرست. 😱", "یه عکس از کفش‌هایی که الان پات هست بفرست. 👟", "یه عکس از آسمون (یا سقف) که همین الان بالای سرته بگیر و بفرست. ☁️", "یه عکس از هدفت (نوشیدنی) بفرست. ☕", "یه عکس از یه وسیله توی اتاقت که برات عزیزه بفرست. 🧸", "یه سلفی خیلی ادایی و ژست‌دار بفرست (مدل عکاسی فشن). 💅", "یه عکس از دست‌هات بفرست. 🖐️", "یه عکس از هاردیسک یا یخچالت (در حالت باز) بفرست. 🧊", "یه عکس با حالتی که انگار داری گریه می‌کنی بفرست. 😭", "یه سلفی با یه وسیله‌ای که روی سرت گذاشتی (مثل کلاه، قابلمه و...) بفرست. 🍳", "یه عکس از منظره‌ای که الان از پنجره می‌بینی بفرست. 🪟", "یه عکس بفرست که توش یک چیز قرمز پیدا باشه. 🔴", "یه سلفی با حالت بامزه (ادای یه شخصیت کارتونی) بفرست. 🐭", "یه عکس از یه چیزی که امروز خریدی بفرست (حتی اگه خیلی کوچیک باشه). 🛍️", "یه عکس از پای عروسکت یا حیوون خونگیت (اگه نداری، یه وسیله) بفرست. 🐾", "یه سلفی با حالت فکری و متفکر بفرست. 🤔", "یه عکس از تختت بفرست. 🛏️", "یه سلفی با حالت شیطون و چشمک بفرست. 😉", "یه عکس از یه چیز کج و کوله یا به‌هم‌ریخته توی خونه بفرست. 🌀", "یه عکس از آینه بفرست (بدون اینکه صورتت کامل معلوم باشه). 🪞", "یه سلفی با حالت تعجب‌زده بفرست. 😲", "یه عکس از یه تیکه از لباست که الان تنت هست بفرست. 👕", "یه عکس از هر چیزی که رنگش آبیه بفرست. 🔵", "یه وویس ۲۰ ثانیه‌ای بفرست و توش فقط با خنده حرف بزن. 😂", "یه وویس بفرست و توش یه آهنگ بخون. 🎤", "یه وویس بفرست و با صدای خیلی نازک و بچگانه حرف بزن. 👶", "یه وویس بفرست و یه راز کوچیک از خودت رو لو بده. 🤫", "یه وویس بفرست و توش منو (به شوخی) مسخره کن. 😜", "یه وویس بفرست و بگو «ببخشید» با یه لحن خیلی احساسی. 🥺", "یه وویس ۱۰ ثانیه‌ای بفرست و توش فقط سکوت کن. 🤐", "یه وویس بفرست و توش ۵ تا حیوون رو با صداشون تقلید کن. 🦁", "یه وویس بفرست و توش با یه لهجه غلیظ حرف بزن. 🗣️", "یه وویس بفرست و توش یه شعر طنز بخون. 📜", "یه وویس بفرست و بگو چرا الان خسته‌ای. 😮‍💨", "یه وویس بفرست و توش یه چیزی رو با عصبانیت (الکی) بگو. 😠", "یه وویس بفرست و توش اسم منو ۱۰ بار پشت سر هم صدا بزن. 📣", "یه وویس بفرست و توش یک دقیقه تعریف کن که امروز چیکار کردی. 📅", "یه وویس بفرست و با صدای گریه‌دار (الکی) حرف بزن. 😭", "همین الان ۱۰ تا شنا (یا اسکات) برو. 🏋️‍♂️", "یه لیوان آب بریز روی صورتت (یا حداقل دستت). 💦", "۱ دقیقه روی یک پا بایست. 🦩", "برو یه بستنی یا شکلات بخور و عکسش رو بفرست. 🍦", "یه رقص ۱۵ ثانیه‌ای انجام بده و از خودت فیلم بگیر. 🕺", "از جات بپر بالا و وقتی پایین اومدی بگو «گربه!». 🐈", "یه بالش رو ۱۰ بار پرت کن هوا. 🛏️", "برو یه چیزی از اتاقت بردار که خیلی عجیبه و بیار نشونم بده. 👽", "ادای ۳ تا حیوون رو دربیار (فیلم بگیر). 🐒", "۱۰ ثانیه با یه حالت صورت خیلی عجیب بمون (فیلم بگیر). 🤪", "یه کاغذ بردار و یه نقاشی ۲۰ ثانیه‌ای از من بکش. 🎨", "برو یه لیوان آب بخور، فقط با یه نفس! 💧", "دستات رو ۱۰ ثانیه روی یخ بذار (اگه توی یخچال یخ داری). 🧊", "برای ۱ دقیقه مثل ربات راه برو (فیلم بگیر). 🤖", "همین الان یه حرکات ورزشی عجیب (مثل یوگا) انجام بده. 🧘‍♂️", "اسم منو توی گوشیت به یه اسم خنده‌دار تغییر بده و اسکرین‌شات بفرست. 📱", "به آخرین نفر توی لیست مخاطبینت یه پیام «سلام» بفرست. 📨", "۵ تا ایموجی بفرست که حال الانتو نشون بده. 😊", "یه استاتوس (وضعیت) بذار که توش اسم من باشه. 📢", "اسم منو توی بایو (بیوگرافی) واتساپت بذار و ۱۰ دقیقه برندار. 📝", "یه پیام عاشقانه یا خیلی احساسی برام تایپ کن و بفرست. ❤️", "توی گوگل سرچ کن «چطور یه نفر رو بخندونیم» و اولین نتیجه رو برام بفرست. 🔍", "اسم ۵ تا از دوستات رو بفرست که فکر می‌کنی شبیه من هستن. 👯‍♂️", "یه عکس از پروفایل واتساپت بگیر و بفرست. 🖼️", "برای من یه شعر ۴ خطی بنویس و بفرست. ✍️", "آخرین عکسی که توی گالریت (یا سیو) هست رو بفرست. 🖼️", "یه پیام به یه دوستت بفرست و بگو «دلم برات تنگ شده» (اسکرین‌شات بفرست). 💌", "توی تقویم گوشیت برای فردا یه یادداشت بنویس «به فردین/مژگان زنگ بزن». 📅", "اسم ۳ تا از ویژگی‌های خوب خودت رو بفرست. 🌟", "بگو بزرگترین حسرت زندگیت چیه. 🌧️", "یه ایموجی بفرست که هیچ‌وقت ازش استفاده نمی‌کنی. 🦄", "صدای زنگ گوشیت چیه؟ بگو. 🔔", "آخرین بار کِی گریه کردی و چرا؟ 😢", "یه جمله به انگلیسی بفرست که معنیش رو دوست داری. 🇬🇧", "به من بگو اگه قرار بود فردا بمیرم، اولین کاری که می‌کردی چی بود؟ ⏳"
 ];
 
+// تابع برای انتقال به صفحه بازی (شبیه سازی صفحه جدید)
+function goToGameScreen() {
+  document.getElementById('connectPanel').classList.add('hidden');
+  mainHeader.classList.add('hidden'); // مخفی کردن هدر اصلی
+  gameSection.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' }); // اسکرول به بالا
+}
+
 document.getElementById('hostBtn').onclick = () => {
   myRole = 'host'; currentRoom = Math.random().toString(36).substring(2, 8).toUpperCase();
-  document.getElementById('connectPanel').classList.add('hidden'); gameSection.classList.remove('hidden');
+  goToGameScreen();
   roomInfoBox.classList.remove('hidden'); document.getElementById('roomCodeDisplay').innerText = currentRoom;
   waitStatusText.innerText = 'در انتظار ورود مژگان...'; spinBtn.disabled = true; spinBtn.innerText = 'در انتظار نفر دوم...';
   cardBox.innerText = 'کد اتاق را برای مژگان بفرست.'; connectToSupabase();
@@ -193,7 +187,7 @@ document.getElementById('joinRoomBtn').onclick = () => {
   const code = document.getElementById('roomCodeIn').value.trim().toUpperCase();
   if (code.length < 4) return alert('لطفاً یک کد معتبر وارد کنید!');
   myRole = 'guest'; currentRoom = code;
-  document.getElementById('connectPanel').classList.add('hidden'); gameSection.classList.remove('hidden');
+  goToGameScreen();
   roomInfoBox.classList.remove('hidden'); document.getElementById('roomCodeDisplay').innerText = currentRoom;
   waitStatusText.innerText = 'در حال اتصال به اتاق...'; spinBtn.disabled = true; spinBtn.innerText = 'در حال اتصال...';
   cardBox.innerText = 'لطفاً صبر کنید...'; connectToSupabase();
@@ -201,7 +195,6 @@ document.getElementById('joinRoomBtn').onclick = () => {
 
 function connectToSupabase() {
   channel = supabaseClient.channel('room-' + currentRoom, { config: { presence: { key: myRole } } });
-
   channel
     .on('broadcast', { event: 'game_action' }, (payload) => { handleOpponentAction(payload.payload); })
     .on('broadcast', { event: 'chat_message' }, (payload) => { appendChatMessage(payload.payload.text, 'opp'); })
@@ -222,20 +215,15 @@ function sendChatMessage() {
   if (!text) return;
   chatInput.value = '';
   appendChatMessage(text, 'me');
-  if (channel && isConnected) {
-    channel.send({ type: 'broadcast', event: 'chat_message', payload: { text: text } });
-  }
+  if (channel && isConnected) channel.send({ type: 'broadcast', event: 'chat_message', payload: { text: text } });
 }
-
 sendChatBtn.onclick = sendChatMessage;
 chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatMessage(); });
 
 function appendChatMessage(text, who) {
   const div = document.createElement('div');
-  div.className = 'msg ' + who;
-  div.innerText = text;
-  chatMessages.appendChild(div);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  div.className = 'msg ' + who; div.innerText = text;
+  chatMessages.appendChild(div); chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 function setTurn(isMe) {
@@ -248,50 +236,31 @@ function setTurn(isMe) {
 
 spinBtn.onclick = () => {
   if (!isMyTurn) return; 
-  setTurn(false); 
-  cardBox.innerText = "در حال چرخش...";
-  
+  setTurn(false); cardBox.innerText = "در حال چرخش...";
   playSound('spin');
-  
   const resultIndex = Math.floor(Math.random() * 2); 
   let cardText = "";
-  
-  if (resultIndex === 0) {
-    cardText = truthsData[Math.floor(Math.random() * truthsData.length)];
-  } else {
-    cardText = daresData[Math.floor(Math.random() * daresData.length)];
-  }
-  
+  if (resultIndex === 0) cardText = truthsData[Math.floor(Math.random() * truthsData.length)];
+  else cardText = daresData[Math.floor(Math.random() * daresData.length)];
   channel.send({ type: 'broadcast', event: 'game_action', payload: { type: 'spin_result', resultIndex, cardText } });
   animateWheel(resultIndex, cardText, true);
 };
 
 function animateWheel(resultIndex, cardText, isMe) {
   if (!isMe) playSound('spin');
-
   currentRotation += (360 * 4) + (resultIndex * 180) + 90; 
   wheel.style.transform = `rotate(${currentRotation}deg)`;
-  
   setTimeout(() => {
     const resultTitle = ["حقیقت 💭", "جرات 🔥"][resultIndex];
     cardBox.innerText = `${resultTitle}\n\n${cardText}`;
-    
     playSound('result');
-    
-    if (isMe && channel) {
-      channel.send({ type: 'broadcast', event: 'game_action', payload: { type: 'turn_change' } });
-    }
+    if (isMe && channel) channel.send({ type: 'broadcast', event: 'game_action', payload: { type: 'turn_change' } });
   }, 3100); 
 }
 
 function handleOpponentAction(payload) {
-  if (payload.type === 'spin_result') { 
-    setTurn(false); 
-    animateWheel(payload.resultIndex, payload.cardText, false); 
-  } 
-  else if (payload.type === 'turn_change') { 
-    setTurn(true); 
-  }
+  if (payload.type === 'spin_result') { setTurn(false); animateWheel(payload.resultIndex, payload.cardText, false); } 
+  else if (payload.type === 'turn_change') { setTurn(true); }
 }
 </script>
 </body>
