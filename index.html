@@ -2,47 +2,68 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#211b35">
+<meta name="theme-color" content="#ffffff">
 <title>فُرمُژ | بازی دونفره آنلاین</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--bg:#171326;--panel:#241d39;--panel2:#302647;--ink:#fff9f0;--muted:#c6bad6;--gold:#f4c66a;--pink:#ff789b;--green:#6bd6ad;--line:#514365}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#34264d,#171326 60%);color:var(--ink);font-family:Tahoma,Arial,sans-serif;min-height:100vh}
-main{max-width:760px;margin:auto;padding:18px 14px 36px}.brand{text-align:center;padding:12px 0 18px}.brand h1{font-size:32px;margin:0;color:var(--gold);letter-spacing:1px}.brand p{margin:8px 0 0;color:var(--muted);font-size:13px}
-.panel{background:rgba(36,29,57,.96);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 12px 30px #09061155}
-h2{font-size:17px;margin:0 0 12px;color:var(--gold)}p{line-height:1.8}.muted{color:var(--muted);font-size:13px}
-input{width:100%;background:#171326;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px;margin:6px 0;text-align:center;font-size:18px;letter-spacing:2px}
-button{border:0;border-radius:12px;padding:12px 14px;font-weight:bold;cursor:pointer;background:var(--gold);color:#24182e;min-height:46px;width:100%;margin-top:8px;font-family:inherit;font-size:16px}
+/* 🎨 تم جدید: روزانه، لطیف و مدرن */
+:root{
+  --bg-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+  --panel: #ffffff;
+  --panel2: #f1f2f6;
+  --ink: #2d3436;
+  --muted: #636e72;
+  --pink: #ff7675;
+  --blue: #74b9ff;
+  --green: #55efc4;
+  --line: #dfe6e9;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg-gradient);color:var(--ink);font-family:Tahoma,Arial,sans-serif;min-height:100vh}
+main{max-width:760px;margin:auto;padding:18px 14px 36px}
+.brand{text-align:center;padding:12px 0 18px}
+.brand h1{font-size:32px;margin:0;color:var(--pink);letter-spacing:1px;text-shadow: 0 2px 4px rgba(255,118,117,0.2)}
+.brand p{margin:8px 0 0;color:var(--muted);font-size:13px}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 10px 30px rgba(0,0,0,0.05)}
+h2{font-size:17px;margin:0 0 12px;color:var(--pink)}
+p{line-height:1.8}.muted{color:var(--muted);font-size:13px}
+
+input{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px;margin:6px 0;text-align:center;font-size:18px;letter-spacing:2px}
+button{border:0;border-radius:12px;padding:12px 14px;font-weight:bold;cursor:pointer;background:var(--pink);color:#fff;min-height:46px;width:100%;margin-top:8px;font-family:inherit;font-size:16px;transition:0.2s}
+button:hover{opacity:0.9}
 button.alt{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
-button.join{background:var(--green);color:#171326}
-button:disabled{opacity:.45;cursor:not-allowed}
-.hidden{display:none!important}
-.status{padding:10px;border-radius:12px;background:#171326;color:var(--muted);font-size:13px;margin-top:15px;text-align:center}
-.status.ok{color:var(--green);border:1px solid var(--green)}
+button.join{background:var(--blue);color:#fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+
+.status{padding:10px;border-radius:12px;background:var(--panel2);color:var(--muted);font-size:13px;margin-top:15px;text-align:center;border:1px solid var(--line)}
+.status.ok{color:#00b894;border:1px solid #00b894;background:#e8f8f5}
+
 .players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.player{background:#171326;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center;transition:0.3s}
-.player.active{border-color:var(--gold);box-shadow:0 0 15px #f4c66a88}
-.avatar{width:70px;height:70px;border-radius:50%;border:4px solid var(--gold);margin:0 auto 8px;display:grid;place-items:center;font-size:24px;font-weight:bold;background:var(--panel2)}
-.player:first-child .avatar{border-color:#4d9dff;color:#4d9dff}.player:last-child .avatar{border-color:#ff78b5;color:#ff78b5}
+.player{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center;transition:0.3s}
+.player.active{border-color:var(--pink);box-shadow:0 0 15px rgba(255,118,117,0.3);background:#fff}
+.avatar{width:70px;height:70px;border-radius:50%;border:3px solid var(--pink);margin:0 auto 8px;display:grid;place-items:center;font-size:24px;font-weight:bold;background:#fff;color:var(--pink)}
+.player:first-child .avatar{border-color:var(--blue);color:var(--blue)}
+.player:last-child .avatar{border-color:var(--pink);color:var(--pink)}
 
 .wheelbox{text-align:center;margin-top:20px}
-.wheel{width:min(70vw,250px);height:min(70vw,250px);border-radius:50%;margin:8px auto 14px;background:conic-gradient(#e85e83 0 50%, #6a55a5 50% 100%);border:8px solid #f4c66a;display:grid;place-items:center;position:relative;transition:transform 3s cubic-bezier(0.25, 0.1, 0.25, 1)}
-.wheel:after{content:"";position:absolute;top:-16px;border-left:12px solid transparent;border-right:12px solid transparent;border-top:0;border-bottom:22px solid var(--gold)}
-.wheel span{background:#211b35;padding:17px;border-radius:50%;font-weight:bold;z-index:10}
+.wheel{width:min(70vw,250px);height:min(70vw,250px);border-radius:50%;margin:8px auto 14px;background:conic-gradient(var(--pink) 0 50%, var(--blue) 50% 100%);border:8px solid #fff;display:grid;place-items:center;position:relative;transition:transform 3s cubic-bezier(0.25, 0.1, 0.25, 1);box-shadow: 0 10px 25px rgba(0,0,0,0.15)}
+.wheel:after{content:"";position:absolute;top:-16px;border-left:12px solid transparent;border-right:12px solid transparent;border-top:0;border-bottom:22px solid #fff;filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2))}
+.wheel span{background:#fff;padding:17px;border-radius:50%;font-weight:bold;z-index:10;color:var(--ink);box-shadow: 0 2px 5px rgba(0,0,0,0.1)}
 
-/* 🌟 دکمه قطع صدا */
 .controls{display:flex; gap:10px;}
 #muteBtn{width: 50px; font-size: 20px; padding: 0; background: var(--panel2); border:1px solid var(--line); color: var(--ink);}
 
-.card{min-height:120px;display:grid;place-items:center;text-align:center;background:#171326;border:1px dashed var(--gold);border-radius:15px;padding:18px;font-size:16px;line-height:1.8;margin-top:15px;white-space:pre-wrap}
+.card{min-height:120px;display:grid;place-items:center;text-align:center;background:var(--panel2);border:2px dashed var(--blue);border-radius:15px;padding:18px;font-size:16px;line-height:1.8;margin-top:15px;white-space:pre-wrap;color:var(--ink)}
+
 .chat-container{margin-top:20px;border-top:1px solid var(--line);padding-top:15px;}
-.chat-messages{height:180px;overflow-y:auto;background:#171326;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;font-size:14px}
+.chat-messages{height:180px;overflow-y:auto;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;font-size:14px}
 .msg{max-width:80%;padding:8px 12px;border-radius:12px;line-height:1.4;word-wrap:break-word;}
-.msg.me{align-self:flex-start;background:var(--gold);color:#24182e;border-bottom-right-radius:2px;}
-.msg.opp{align-self:flex-end;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:2px;}
+.msg.me{align-self:flex-start;background:var(--pink);color:#fff;border-bottom-right-radius:2px;}
+.msg.opp{align-self:flex-end;background:#fff;border:1px solid var(--line);color:var(--ink);border-bottom-left-radius:2px;}
 .chat-input-area{display:flex;gap:8px;align-items:center;}
-.chat-input-area input[type="text"]{margin:0;text-align:right;letter-spacing:0;font-size:14px;border-radius:12px;flex:1;}
-.chat-input-area button{width:auto;margin:0;padding:0 20px;background:var(--green);color:#171326;}
+.chat-input-area input[type="text"]{margin:0;text-align:right;letter-spacing:0;font-size:14px;border-radius:12px;flex:1;background:#fff;text-transform:none;}
+.chat-input-area button{width:auto;margin:0;padding:0 20px;background:var(--blue);color:#fff;}
 </style>
 </head>
 <body><main>
@@ -61,8 +82,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 <section id="game" class="hidden">
   <section class="panel">
-    <div class="status" id="roomInfo" style="margin-bottom:15px; border-color:var(--gold)">
-      کد اتاق شما: <b id="roomCodeDisplay" style="font-size: 20px; letter-spacing: 2px; color: var(--gold);"></b><br>
+    <div class="status" id="roomInfo" style="margin-bottom:15px; border-color:var(--blue); background:#f0f8ff; color:var(--ink)">
+      کد اتاق شما: <b id="roomCodeDisplay" style="font-size: 20px; letter-spacing: 2px; color: var(--pink);"></b><br>
       <span id="waitStatusText" style="font-size: 14px; margin-top:5px; display:block;">در انتظار ورود نفر دوم...</span>
     </div>
 
@@ -112,9 +133,7 @@ const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 const sendChatBtn = document.getElementById('sendChatBtn');
 
-// ==========================================
-// 🎵 سیستم تولید صدا (بدون نیاز به فایل خارجی)
-// ==========================================
+// 🎵 سیستم تولید صدا
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
 
@@ -130,7 +149,6 @@ function playSound(type) {
   const now = audioCtx.currentTime;
 
   if (type === 'spin') {
-    // صدای چرخش (فرکانس پایین رونده)
     osc.type = 'sine';
     osc.frequency.setValueAtTime(600, now);
     osc.frequency.exponentialRampToValueAtTime(100, now + 3);
@@ -139,10 +157,9 @@ function playSound(type) {
     osc.start(now);
     osc.stop(now + 3);
   } else if (type === 'result') {
-    // صدای نمایش نتیجه (زنگ دینگ)
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(523.25, now); // C5
-    osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+    osc.frequency.setValueAtTime(523.25, now); 
+    osc.frequency.setValueAtTime(659.25, now + 0.1); 
     gainNode.gain.setValueAtTime(0.5, now);
     gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
     osc.start(now);
@@ -155,9 +172,7 @@ muteBtn.onclick = () => {
   muteBtn.innerText = isSoundOn ? '🔊' : '🔇';
 };
 
-// ==========================================
-// لیست‌های حقیقت و جرات
-// ==========================================
+// لیست‌ها
 const truthsData = [
   "بزرگترین ترست توی زندگی چیه؟", "بزرگترین آرزوت چیه؟", "یه رازی که تا حالا به هیچ‌کس نگفتی رو بگو.", "بزرگترین اشتباه زندگیت چی بود؟", "چیزی هست که توی زندگی حسرتش رو می‌خوری؟", "بزرگترین موفقیت زندگیت (از نظر خودت) چیه؟", "یه عادت بد داری که دوست داری ترکش کنی؟ چیه؟", "به نظرت آدم‌ها درباره تو چه قضاوت اشتباهی می‌کنن؟", "شرم‌آورترین لحظه زندگیت چی بوده؟", "بزرگترین دروغی که تا حالا گفتی چی بود؟", "چیزی هست که ازش خجالت می‌کشی ولی کسی نمی‌دونه؟", "چه چیزی باعث میشه احساس ضعف و ناتوانی کنی؟", "اگه قرار بود یه کتاب درباره زندگیت بنویسی، اسمش چی بود؟", "بهترین نصیحتی که تا حالا شنیدی چی بود؟", "چیزی که هنوز توی زندگی نکردی ولی خیلی دلت می‌خواد انجامش بدی چیه؟", "بزرگترین ترست درباره پیری چیه؟", "چیزی هست که دوست داری در مورد خودت تغییر بدی؟", "آخرین باری که از ته دل گریه کردی کِی بود و چرا؟", "اگه یه روز از زندگیت حذف میشد، کدوم روز بود؟", "چیزی که همیشه دلت می‌خواسته انجام بدی ولی بخاطر حرف مردم انجام ندادی چیه؟", "بزرگترین ریسکی که توی زندگیت کردی چی بود؟", "چه موقعیتی باعث میشه از کوره دربری؟", "چیزی که هیچ‌وقت به کسی نگفتی و الان می‌خوای بگی چیه؟", "بهترین حس دنیا از نظر تو چیه؟", "اگه می‌تونستی یه ویژگی اخلاقی رو توی خودت کلاً پاک کنی، کدوم بود؟", "بهترین خاطره‌ای که از بچگیت داری چیه؟", "شیطنت‌ترین کاری که توی بچگی کردی چی بود؟", "اولین شغل یا کاری که برات پول گرفتی چی بود؟", "چیزی که از بچگی تا حالا نگه داشتی چیه؟", "بهترین هدیه‌ای که توی بچگی گرفتی چی بود؟", "کدوم معلمت رو هیچ‌وقت فراموش نمی‌کنی و چرا؟", "عجیب‌ترین رویایی که دیدی چی بود؟", "اگه می‌تونستی یه سفر به گذشته داشته باشی، کجا می‌رفتی؟", "اولین باری که از خونه دور شدی یادت هست چه حسی داشتی؟", "بزرگترین شیطنتی که توی مدرسه کردی چی بود؟", "غذایی که مامانت (یا مادربزرگت) درست می‌کرد و خیلی دوست داری چیه؟", "چیزی که توی بچگی ازش می‌ترسیدی چیه؟", "بهترین دوست دوران بچگیت کی بود؟ الان کجاست؟", "اولین آهنگی که حفظ کردی و می‌خوندی چی بود؟", "اگه می‌تونستی یه روز از دوران مدرسه رو دوباره تجربه کنی، کدوم روز بود؟", "بزرگترین آرزوی بچگیت چی بود؟ (مثلاً می‌خواستی چی بشی؟)", "چیزی که توی بچگی همیشه دلت می‌خواست داشته باشی ولی نداشتی چی بود؟", "اولین موبایلی که داشتی چی بود؟", "عجیب‌ترین غذایی که تا حالا خوردی چیه؟", "بهترین سفری که توی زندگیت رفتی کجا بود؟", "چیزی که باعث شد توی زندگیت مسیرت عوض بشه چی بود؟", "اولین بار که عاشق یه چیزی (مثلاً یه حیوون، یه کتاب، یه هنر) شدی چی بود؟", "بدترین درسی که توی مدرسه داشتی چی بود؟", "یه خاطره بامزه که هیچ‌وقت فراموش نمی‌کنی رو تعریف کن.", "چیزی که هنوز از بچگی توی ذهنت مونده و باعث خندت میشه چیه؟", "بهترین ویژگی یه دوست خوب از نظر تو چیه؟", "چیزی که باعث میشه به یه نفر اعتماد کنی چیه؟", "اولین چیزی که توی رفتار یا شخصیت یه آدم توجهت رو جلب می‌کنه چیه؟", "بزرگترین Red Flag (علامت هشدار) توی آدم‌ها از نظر تو چیه؟", "چه چیزی باعث میشه از یه نفر فاصله بگیری؟", "به نظرت بزرگترین نشانه احترام چیه؟", "چیزی که من می‌گم و تو همیشه تظاهر می‌کنی موافقی چیه؟", "به نظرت آدم‌ها بیشتر به چه چیزی توی زندگی اهمیت میدن که نباید؟", "چیزی که توی خودت دوست داری بیشتر روی اون کار کنی چیه؟", "اگه قرار بود یه قانون برای کل دنیا وضع کنی، چی بود؟", "به نظرت بخشندگی و مهربونی بیشتر توی پول خرج کردنه یا توی زمان گذاشتن؟", "چیزی که باعث میشه حس کنی یه آدم قابل اعتماده چیه؟", "به نظرت بهترین راه برای حل کردن یه سوءتفاهم چیه؟", "چیزی که توی آدم‌ها اذیتت می‌کنه ولی به روی خودت نمیاری چیه؟", "به نظرت بزرگترین تفاوت بین زن‌ها و مردها توی برخورد با مشکلات چیه؟", "چیزی که یاد گرفتی ازش برای خودت و آینده‌ت استفاده کنی چیه؟", "به نظرت انتقام گرفتن درسته یا بخشیدن؟", "چیزی که توی زندگیت بهت ثابت شده و همیشه بهش پایبندی چیه؟", "به نظرت شانس وجود داره یا همه‌چیز تلاشه؟", "چیزی که توی یه رابطه دوستی برات غیرقابل بخششه چیه؟", "اگه بخوای یه نصیحت به خودت توی ۱۰ سال پیش بکنی، چی می‌گی؟", "به نظرت مهم‌ترین درسی که تا حالا توی زندگی یاد گرفتی چیه؟", "چیزی که باعث میشه احساس امنیت کنی چیه؟", "بزرگترین تفاوت بین کسی که دوستش داری و کسی که فقط باهاش راحتی چیه؟", "به نظرت بهترین راه برای اینکه به کسی نشون بدی برات مهمه چیه؟", "اگه می‌تونستی یه توانایی خارق‌العاده داشته باشی، چی انتخاب می‌کردی؟", "آهنگی که وقتی میشنوی حالت خوب میشه چیه؟", "غذایی که ازش متنفری چیه؟", "اگه یه روز کامل خونه خالی بود و هیچ کاری نداشتیم، چیکار می‌کردیم؟", "بهترین فیلمی که تا حالا دیدی چیه؟", "چیزی که همیشه دلت می‌خواسته بپوشی ولی نپوشیدی چیه؟", "به نظرت اگه توی یه فیلم بودیم، چه ژانری بود؟", "اگه یه حیوون می‌شدیم، هر کدوممون چه حیوونی بودیم؟", "صبح‌ها زود بیدار میشی یا شب‌ها دیر می‌خوابی؟", "کتاب یا فیلم؟ کدوم رو بیشتر دوست داری؟", "اگه یه روز تمام پول دنیا رو داشتی، اولین کاری که می‌کردی چی بود؟", "یه سرگرمی یا هنری که دوست داری یاد بگیری چیه؟", "اگه می‌تونستی یه جای دنیا رو برای زندگی انتخاب کنی، کجا می‌رفتی؟", "بهترین هدیه‌ای که تا حالا گرفتی چی بود؟", "چیزی که هیچ‌وقت ازش سیر نمیشی چیه؟ (مثلاً یه سریال، یه غذا، یه کار)", "اگه یه روز خودت رو جای من می‌دیدی، اولین کاری که توی زندگیم می‌کردی چی بود؟", "یه چیز بامزه یا عجیب که توی گوشیت داری چیه؟", "عجیب‌ترین چیزی که توی یخچالت داری چیه؟", "اگه یه سوپرپاور داشتی که فقط یک بار می‌تونستی استفاده کنی، چیکار می‌کردی؟", "بزرگترین تفریحی که توی یه روز بارونی دوست داری انجام بدی چیه؟", "اگه بخوای یه روز رو ۱۰۰ بار تکرار کنی، کدوم روزه؟", "بهترین تعریفی که یه نفر ازت کرده چی بود؟", "چیزی که باعث میشه سریع بخندی چیه؟", "اگه قرار بود یه آهنگ برای زندگیت بسازی، اسمش چی بود؟", "چه سوالی دوست داشتی ازت پرسیده بشه ولی هیچ‌کس نپرسیده؟"
 ];
@@ -236,7 +251,7 @@ spinBtn.onclick = () => {
   setTurn(false); 
   cardBox.innerText = "در حال چرخش...";
   
-  playSound('spin'); // 🌟 پخش صدای چرخش
+  playSound('spin');
   
   const resultIndex = Math.floor(Math.random() * 2); 
   let cardText = "";
@@ -252,7 +267,7 @@ spinBtn.onclick = () => {
 };
 
 function animateWheel(resultIndex, cardText, isMe) {
-  if (!isMe) playSound('spin'); // اگر حریف چرخونده، ما هم صدا رو بشنویم
+  if (!isMe) playSound('spin');
 
   currentRotation += (360 * 4) + (resultIndex * 180) + 90; 
   wheel.style.transform = `rotate(${currentRotation}deg)`;
@@ -261,7 +276,7 @@ function animateWheel(resultIndex, cardText, isMe) {
     const resultTitle = ["حقیقت 💭", "جرات 🔥"][resultIndex];
     cardBox.innerText = `${resultTitle}\n\n${cardText}`;
     
-    playSound('result'); // 🌟 پخش صدای نتیجه
+    playSound('result');
     
     if (isMe && channel) {
       channel.send({ type: 'broadcast', event: 'game_action', payload: { type: 'turn_change' } });
