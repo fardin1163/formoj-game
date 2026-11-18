@@ -124,6 +124,7 @@ let isSoundOn = true;
 
 const gameSection = document.getElementById('game');
 const mainHeader = document.getElementById('mainHeader');
+const connectPanel = document.getElementById('connectPanel');
 const spinBtn = document.getElementById('spinBtn');
 const muteBtn = document.getElementById('muteBtn');
 const cardBox = document.getElementById('cardBox');
@@ -165,10 +166,11 @@ const daresData = [
 ];
 
 function goToGameScreen() {
-  document.getElementById('connectPanel').classList.add('hidden');
-  mainHeader.classList.add('hidden'); 
+  connectPanel.style.display = 'none'; // کاملاً حذف پنل ورود
+  mainHeader.style.display = 'none'; // حذف هدر
+  gameSection.style.display = 'block';
   gameSection.classList.remove('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' }); 
+  window.scrollTo(0, 0); // اسکرول به بالا
 }
 
 document.getElementById('hostBtn').onclick = () => {
